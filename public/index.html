@@ -1023,9 +1023,9 @@
           <button class="cal-nav-btn" onclick="calNext()">›</button>
         </div>
         <div class="cal-legend">
-          <div class="cal-legend-item"><div class="cal-legend-dot" style="background:rgba(46,204,113,0.5)"></div id="cal-leg-profit">Profit day</div>
-          <div class="cal-legend-item"><div class="cal-legend-dot" style="background:rgba(231,76,60,0.4)"></div id="cal-leg-loss">Loss day</div>
-          <div class="cal-legend-item"><div class="cal-legend-dot" style="background:var(--panel2)"></div id="cal-leg-none">No trades</div>
+          <div class="cal-legend-item"><div class="cal-legend-dot" style="background:rgba(46,204,113,0.5)"></div><span id="cal-leg-profit">Profit day</span></div>
+          <div class="cal-legend-item"><div class="cal-legend-dot" style="background:rgba(231,76,60,0.4)"></div><span id="cal-leg-loss">Loss day</span></div>
+          <div class="cal-legend-item"><div class="cal-legend-dot" style="background:var(--panel2)"></div><span id="cal-leg-none">No trades</span></div>
         </div>
       </div>
       <div class="calendar-grid" id="cal-grid"></div>
@@ -1094,11 +1094,15 @@ function renderCalendar(income, trades) {
     dailyTrades[key] = (dailyTrades[key] || 0) + 1;
   });
 
-  const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-  document.getElementById('cal-month-label').textContent = `${MONTHS[calMonth]} ${calYear}`;
+  const MONTHS_EN = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const MONTHS_ZH = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+  const MONTHS = currentLang === 'zh' ? MONTHS_ZH : MONTHS_EN;
+  document.getElementById('cal-month-label').textContent = currentLang === 'zh' ? `${calYear}年${MONTHS[calMonth]}` : `${MONTHS[calMonth]} ${calYear}`;
 
   const grid = document.getElementById('cal-grid');
-  const DOWS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const DOWS = currentLang === 'zh'
+    ? ['日','一','二','三','四','五','六']
+    : ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
   const today = new Date();
 
   // Day-of-week headers
@@ -1376,11 +1380,11 @@ function renderStats(trades, income) {
   const avg = trades.length ? pnl / trades.length : 0;
 
   setEl('s-pnl', fmt(pnl), pnl >= 0 ? 'green' : 'red');
-  setEl('s-pnl-sub', 'USDT realised');
+  setEl('s-pnl-sub', currentLang === 'zh' ? 'USDT 已实现' : 'USDT realised');
   setEl('s-trades', trades.length);
-  setEl('s-trades-sub', `${wins.length}W / ${losses.length}L`);
+  setEl('s-trades-sub', currentLang === 'zh' ? `${wins.length}胜 / ${losses.length}负` : `${wins.length}W / ${losses.length}L`);
   setEl('s-winrate', winRate + '%', parseFloat(winRate) >= 50 ? 'green' : 'red');
-  setEl('s-wr-sub', `${wins.length} wins / ${losses.length} losses`);
+  setEl('s-wr-sub', currentLang === 'zh' ? `${wins.length} 胜 / ${losses.length} 负` : `${wins.length} wins / ${losses.length} losses`);
   setEl('s-best', fmt(best), 'green');
   document.getElementById('s-best-sym').textContent = bestTrade ? bestTrade.symbol : '—';
   setEl('s-worst', fmt(worst), 'red');
@@ -1394,7 +1398,7 @@ function renderStats(trades, income) {
   if (walletBalance !== null) {
     const startingCapital = walletBalance - netPnl;
     document.getElementById('s-wallet').textContent = startingCapital.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-    document.getElementById('s-wallet').parentElement.querySelector('.stat-label').textContent = 'Starting Capital';
+    document.getElementById('sl-cap').textContent = t('slCap');
     const roc = startingCapital > 0 ? (netPnl / startingCapital) * 100 : 0;
     setEl('s-roc', roc.toFixed(2) + '%', roc >= 0 ? 'green' : 'red');
     document.getElementById('s-roc-sub').textContent = `${fmt(netPnl)} ÷ ${startingCapital.toLocaleString('en-US', {maximumFractionDigits: 2})} USDT`;
