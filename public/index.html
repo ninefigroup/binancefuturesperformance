@@ -731,6 +731,28 @@
   ::-webkit-scrollbar-track { background: var(--panel); }
   ::-webkit-scrollbar-thumb { background: var(--gold-dim); border-radius: 4px; }
 
+  .lang-toggle {
+    display: flex;
+    background: var(--panel2);
+    border: 1px solid var(--gold-border);
+    border-radius: 7px;
+    overflow: hidden;
+  }
+  .lang-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-size: 11px;
+    font-weight: 600;
+    padding: 6px 12px;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    letter-spacing: 0.5px;
+    transition: all 0.15s;
+  }
+  .lang-btn.active { background: var(--gold); color: #000; }
+  .lang-btn:not(.active):hover { color: var(--text); }
+
   @media (max-width: 900px) {
     .charts-row, .bottom-row { grid-template-columns: 1fr; }
     .main { padding: 16px; }
@@ -747,17 +769,22 @@
     <div class="logo-mark">NF</div>
     <div>
       <div class="logo-text">NineFi Group</div>
-      <div class="logo-sub">Futures Performance Portal</div>
+      <div class="logo-sub" id="logo-sub-el">Futures Performance Portal</div>
     </div>
   </div>
   <div class="topbar-right">
     <div class="live-badge" id="live-badge" style="display:none">
       <div class="live-dot"></div>
-      LIVE DATA
+      <span id="live-badge-el">LIVE DATA</span>
     </div>
     <button class="btn-refresh" id="btn-disconnect" style="display:none; color:var(--text-muted);" onclick="disconnect()">
       ✕ Disconnect
     </button>
+    <div class="lang-toggle">
+      <button class="lang-btn active" id="lang-en" onclick="setLang('en')">EN</button>
+      <button class="lang-btn" id="lang-zh" onclick="setLang('zh')">中文</button>
+    </div>
+    </div>
   </div>
 </div>
 
@@ -766,27 +793,27 @@
   <!-- SETUP SCREEN -->
   <div id="setup-screen">
     <div class="setup-card">
-      <div class="setup-title">Connect Your Account</div>
-      <div class="setup-sub">Enter your Binance Futures read-only API keys to load your performance data.</div>
+      <div class="setup-title" id="setup-title-el">Connect Your Account</div>
+      <div class="setup-sub" id="setup-sub-el">Enter your Binance Futures read-only API keys to load your performance data.</div>
 
       <div class="error-box" id="setup-error"></div>
 
       <div class="form-group">
-        <label class="form-label">API Key</label>
+        <label class="form-label" id="api-key-lbl">API Key</label>
         <input class="form-input" type="text" id="api-key" placeholder="Paste your Binance API key" autocomplete="off" />
       </div>
       <div class="form-group">
-        <label class="form-label">API Secret</label>
+        <label class="form-label" id="api-secret-lbl">API Secret</label>
         <input class="form-input" type="password" id="api-secret" placeholder="Paste your API secret" autocomplete="off" />
       </div>
 
       <div class="security-note">
         <span>◆</span>
-        <div>Keys are used only in your browser to sign requests directly to Binance. They are never stored or transmitted to any server.</div>
+        <div id="sec-note-el">Keys are used only in your browser to sign requests directly to Binance. They are never stored or transmitted to any server.</div>
       </div>
 
       <button class="btn-primary" id="btn-connect" onclick="connect()">
-        Connect &amp; Load Data
+        <span id="btn-connect-text">Connect &amp; Load Data</span>
       </button>
     </div>
   </div>
@@ -794,7 +821,7 @@
   <!-- LOADING -->
   <div id="loading">
     <div class="spinner"></div>
-    <div class="loading-text">FETCHING TRADING DATA...</div>
+    <div class="loading-text" id="loading-el">FETCHING TRADING DATA...</div>
   </div>
 
   <!-- DASHBOARD -->
@@ -818,61 +845,71 @@
           <option value="BUY">Long Only</option>
           <option value="SELL">Short Only</option>
         </select>
-        <button class="btn-refresh" onclick="refresh()">↻ Refresh</button>
+        <button class="btn-refresh" onclick="refresh()"><span id="btn-refresh-el">↻ Refresh</span></button>
       </div>
     </div>
 
     <!-- STAT CARDS -->
-    <div class="section-label">Overview</div>
+    <div class="section-label" id="sec-overview">Overview</div>
     <div class="stat-grid" id="stat-grid">
       <div class="stat-card highlight">
-        <div class="stat-label">Total Realised PnL</div>
+        <div class="stat-label" id="sl-pnl">Total Realised PnL</div>
         <div class="stat-value gold" id="s-pnl">—</div>
         <div class="stat-sub" id="s-pnl-sub">USDT</div>
       </div>
       <div class="stat-card">
-        <div class="stat-label">Total Trades</div>
+        <div class="stat-label" id="sl-trades">Total Trades</div>
         <div class="stat-value" id="s-trades">—</div>
         <div class="stat-sub" id="s-trades-sub">in period</div>
       </div>
       <div class="stat-card">
-        <div class="stat-label">Win Rate</div>
+        <div class="stat-label" id="sl-winrate">Win Rate</div>
         <div class="stat-value" id="s-winrate">—</div>
         <div class="stat-sub" id="s-wr-sub">wins / losses</div>
       </div>
       <div class="stat-card">
-        <div class="stat-label">Best Trade</div>
+        <div class="stat-label" id="sl-best">Best Trade</div>
         <div class="stat-value green" id="s-best">—</div>
         <div class="stat-sub" id="s-best-sym">—</div>
       </div>
       <div class="stat-card">
-        <div class="stat-label">Worst Trade</div>
+        <div class="stat-label" id="sl-worst">Worst Trade</div>
         <div class="stat-value red" id="s-worst">—</div>
         <div class="stat-sub" id="s-worst-sym">—</div>
       </div>
       <div class="stat-card">
-        <div class="stat-label">Total Fees Paid</div>
+        <div class="stat-label" id="sl-fees">Total Fees Paid</div>
         <div class="stat-value" id="s-fees">—</div>
-        <div class="stat-sub">commission drag</div>
+        <div class="stat-sub" id="sub-fees">commission drag</div>
       </div>
       <div class="stat-card">
-        <div class="stat-label">Net PnL (after fees)</div>
+        <div class="stat-label" id="sl-net">Net PnL (after fees)</div>
         <div class="stat-value" id="s-netpnl">—</div>
-        <div class="stat-sub">realised − fees</div>
+        <div class="stat-sub" id="sub-net">realised − fees</div>
       </div>
       <div class="stat-card">
-        <div class="stat-label">Avg Trade PnL</div>
+        <div class="stat-label" id="sl-avg">Avg Trade PnL</div>
         <div class="stat-value" id="s-avg">—</div>
-        <div class="stat-sub">per closed trade</div>
+        <div class="stat-sub" id="sub-avg">per closed trade</div>
+      </div>
+      <div class="stat-card highlight">
+        <div class="stat-label" id="sl-cap">Starting Capital</div>
+        <div class="stat-value gold" id="s-wallet">—</div>
+        <div class="stat-sub" id="sub-cap">wallet before period PnL</div>
+      </div>
+      <div class="stat-card highlight">
+        <div class="stat-label" id="sl-roc">Return on Capital</div>
+        <div class="stat-value" id="s-roc">—</div>
+        <div class="stat-sub" id="s-roc-sub">net PnL ÷ wallet</div>
       </div>
     </div>
 
     <!-- CHARTS -->
-    <div class="section-label" style="margin-top:24px">Performance Charts</div>
+    <div class="section-label" style="margin-top:24px" id="sec-charts">Performance Charts</div>
     <div class="charts-row">
       <div class="chart-panel">
         <div class="chart-panel-title">
-          Cumulative PnL Curve
+          <span id="ct-equity">Cumulative PnL Curve</span>
           <span id="chart-label-pnl">USDT</span>
         </div>
         <div class="chart-wrap">
@@ -881,8 +918,8 @@
       </div>
       <div class="chart-panel">
         <div class="chart-panel-title">
-          Daily PnL
-          <span>bar chart</span>
+          <span id="ct-daily">Daily PnL</span>
+          <span id="ct-daily-sub">bar chart</span>
         </div>
         <div class="chart-wrap">
           <canvas id="chart-daily"></canvas>
@@ -891,54 +928,54 @@
     </div>
 
     <!-- RATIOS + SYMBOL TABLE -->
-    <div class="section-label">Financial Ratios</div>
+    <div class="section-label" id="sec-ratios">Financial Ratios</div>
     <div class="bottom-row">
       <div class="chart-panel">
         <div class="ratio-grid" id="ratio-grid">
           <div class="ratio-card">
-            <div class="ratio-name">Profit Factor</div>
+            <div class="ratio-name" id="rf-pf">Profit Factor</div>
             <div class="ratio-val" id="r-pf">—</div>
-            <div class="ratio-desc">Gross profit ÷ gross loss. &gt;1.5 is solid.</div>
+            <div class="ratio-desc" id="rd-pf">Gross profit ÷ gross loss. &gt;1.5 is solid.</div>
           </div>
           <div class="ratio-card">
-            <div class="ratio-name">Sharpe Ratio</div>
+            <div class="ratio-name" id="rf-sharpe">Sharpe Ratio</div>
             <div class="ratio-val" id="r-sharpe">—</div>
-            <div class="ratio-desc">Daily PnL return vs volatility.</div>
+            <div class="ratio-desc" id="rd-sharpe">Daily PnL return vs volatility.</div>
           </div>
           <div class="ratio-card">
-            <div class="ratio-name">Expectancy</div>
+            <div class="ratio-name" id="rf-exp">Expectancy</div>
             <div class="ratio-val" id="r-exp">—</div>
-            <div class="ratio-desc">Avg expected USDT per trade.</div>
+            <div class="ratio-desc" id="rd-exp">Avg expected USDT per trade.</div>
           </div>
           <div class="ratio-card">
-            <div class="ratio-name">Avg R:R</div>
+            <div class="ratio-name" id="rf-rr">Avg R:R</div>
             <div class="ratio-val" id="r-rr">—</div>
-            <div class="ratio-desc">Avg win ÷ avg loss size.</div>
+            <div class="ratio-desc" id="rd-rr">Avg win ÷ avg loss size.</div>
           </div>
           <div class="ratio-card">
-            <div class="ratio-name">Max Drawdown</div>
+            <div class="ratio-name" id="rf-dd">Max Drawdown</div>
             <div class="ratio-val" id="r-dd">—</div>
-            <div class="ratio-desc">Largest peak-to-trough loss.</div>
+            <div class="ratio-desc" id="rd-dd">Largest peak-to-trough loss.</div>
           </div>
           <div class="ratio-card">
-            <div class="ratio-name">Calmar Ratio</div>
+            <div class="ratio-name" id="rf-calmar">Calmar Ratio</div>
             <div class="ratio-val" id="r-calmar">—</div>
-            <div class="ratio-desc">Total PnL ÷ max drawdown.</div>
+            <div class="ratio-desc" id="rd-calmar">Total PnL ÷ max drawdown.</div>
           </div>
         </div>
       </div>
       <div class="table-panel">
-        <div class="table-title">Performance by Symbol</div>
+        <div class="table-title" id="sym-title">Performance by Symbol</div>
         <div class="table-scroll">
           <table class="data-table">
             <thead>
               <tr>
-                <th>Symbol</th>
-                <th>Trades</th>
-                <th>Win%</th>
-                <th>Gross PnL</th>
-                <th>Fees</th>
-                <th>Net PnL</th>
+                <th id="th-sym">Symbol</th>
+                <th id="th-trades">Trades</th>
+                <th id="th-win">Win%</th>
+                <th id="th-gross">Gross PnL</th>
+                <th id="th-fees-h">Fees</th>
+                <th id="th-net-h">Net PnL</th>
               </tr>
             </thead>
             <tbody id="symbol-table-body">
@@ -949,26 +986,26 @@
     </div>
 
     <!-- LONG VS SHORT -->
-    <div class="section-label">Long vs Short Breakdown</div>
+    <div class="section-label" id="sec-ls">Long vs Short Breakdown</div>
     <div class="charts-row" style="margin-bottom:20px">
       <div class="chart-panel">
-        <div class="chart-panel-title">Monthly PnL Heatmap <span>grouped by month</span></div>
+        <div class="chart-panel-title"><span id="ct-monthly">Monthly PnL Heatmap</span> <span id="ct-monthly-sub">grouped by month</span></div>
         <div class="chart-wrap">
           <canvas id="chart-monthly"></canvas>
         </div>
       </div>
       <div class="chart-panel">
-        <div class="chart-panel-title">Long vs Short PnL <span>comparison</span></div>
+        <div class="chart-panel-title"><span id="ct-ls">Long vs Short PnL</span> <span id="ct-ls-sub">comparison</span></div>
         <div class="chart-wrap" style="height:200px">
           <canvas id="chart-ls"></canvas>
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px">
           <div class="ratio-card">
-            <div class="ratio-name">Long PnL</div>
+            <div class="ratio-name" id="ls-long-lbl">Long PnL</div>
             <div class="ratio-val" id="ls-long" style="font-size:16px">—</div>
           </div>
           <div class="ratio-card">
-            <div class="ratio-name">Short PnL</div>
+            <div class="ratio-name" id="ls-short-lbl">Short PnL</div>
             <div class="ratio-val" id="ls-short" style="font-size:16px">—</div>
           </div>
         </div>
@@ -976,19 +1013,19 @@
     </div>
 
     <!-- PNL CALENDAR -->
-    <div class="section-label">PnL Calendar</div>
+    <div class="section-label" id="sec-cal">PnL Calendar</div>
     <div class="calendar-panel">
       <div class="calendar-header">
-        <div class="calendar-title">Daily PnL — Month View</div>
+        <div class="calendar-title" id="cal-title-el">Daily PnL — Month View</div>
         <div class="cal-nav">
           <button class="cal-nav-btn" onclick="calPrev()">‹</button>
           <div class="cal-month-label" id="cal-month-label">—</div>
           <button class="cal-nav-btn" onclick="calNext()">›</button>
         </div>
         <div class="cal-legend">
-          <div class="cal-legend-item"><div class="cal-legend-dot" style="background:rgba(46,204,113,0.5)"></div>Profit day</div>
-          <div class="cal-legend-item"><div class="cal-legend-dot" style="background:rgba(231,76,60,0.4)"></div>Loss day</div>
-          <div class="cal-legend-item"><div class="cal-legend-dot" style="background:var(--panel2)"></div>No trades</div>
+          <div class="cal-legend-item"><div class="cal-legend-dot" style="background:rgba(46,204,113,0.5)"></div id="cal-leg-profit">Profit day</div>
+          <div class="cal-legend-item"><div class="cal-legend-dot" style="background:rgba(231,76,60,0.4)"></div id="cal-leg-loss">Loss day</div>
+          <div class="cal-legend-item"><div class="cal-legend-dot" style="background:var(--panel2)"></div id="cal-leg-none">No trades</div>
         </div>
       </div>
       <div class="calendar-grid" id="cal-grid"></div>
@@ -998,20 +1035,20 @@
     <!-- TRADE HISTORY -->
     <div class="history-panel">
       <div class="history-header">
-        <div class="history-title">Trade History</div>
+        <div class="history-title" id="hist-title">Trade History</div>
         <div class="history-count" id="history-count">0 trades</div>
       </div>
       <div class="table-scroll">
         <table class="data-table">
           <thead>
             <tr>
-              <th>Time</th>
-              <th>Symbol</th>
-              <th>Side</th>
-              <th>Qty</th>
-              <th>Price</th>
-              <th>Realised PnL</th>
-              <th>Commission</th>
+              <th id="th-time">Time</th>
+              <th id="th-sym-h">Symbol</th>
+              <th id="th-side">Side</th>
+              <th id="th-qty">Qty</th>
+              <th id="th-price">Price</th>
+              <th id="th-rpnl">Realised PnL</th>
+              <th id="th-comm">Commission</th>
             </tr>
           </thead>
           <tbody id="trade-history-body"></tbody>
@@ -1023,7 +1060,7 @@
 </div>
 
 <div class="portal-footer">
-  © 2026 NineFi Group · <a href="https://ninefigroup.com.sg">ninefigroup.com.sg</a> · Futures Performance Portal · Read-only API · No trade execution
+  <span id="footer-el">© 2026 NineFi Group · <a href="https://ninefigroup.com.sg">ninefigroup.com.sg</a> · Futures Performance Portal · Read-only API · No trade execution</span>
 </div>
 
 <script>
@@ -1109,19 +1146,19 @@ function renderCalendar(income, trades) {
   const winRate = (profitDays + lossDays) > 0 ? ((profitDays / (profitDays + lossDays)) * 100).toFixed(0) : 0;
   document.getElementById('cal-summary').innerHTML = `
     <div class="cal-sum-item">
-      <div class="cal-sum-label">Month PnL</div>
+      <div class="cal-sum-label">${t('calMonthPnl')}</div>
       <div class="cal-sum-val" style="color:${monthPnl >= 0 ? 'var(--green)' : 'var(--red)'}">${fmt(monthPnl)}</div>
     </div>
     <div class="cal-sum-item">
-      <div class="cal-sum-label">Trading Days</div>
+      <div class="cal-sum-label">${t('calTradingDays')}</div>
       <div class="cal-sum-val" style="color:var(--gold)">${profitDays + lossDays}</div>
     </div>
     <div class="cal-sum-item">
-      <div class="cal-sum-label">Win Days</div>
+      <div class="cal-sum-label">${t('calWinDays')}</div>
       <div class="cal-sum-val" style="color:var(--green)">${profitDays} <span style="font-size:11px;color:var(--text-muted)">(${winRate}%)</span></div>
     </div>
     <div class="cal-sum-item">
-      <div class="cal-sum-label">Total Trades</div>
+      <div class="cal-sum-label">${t('calTotalTrades')}</div>
       <div class="cal-sum-val" style="color:var(--text)">${monthTrades}</div>
     </div>
   `;
@@ -1130,6 +1167,7 @@ function renderCalendar(income, trades) {
 // ── STATE ──
 let API_KEY = '', API_SECRET = '';
 let allTrades = [], allIncome = [];
+let walletBalance = null;
 let currentDays = 7;
 let charts = {};
 
@@ -1200,7 +1238,11 @@ function disconnect() {
 
 // ── LOAD DATA ──
 async function loadAllData() {
-  // Fetch 1 year of trades + income in paginated chunks
+  const balData = await binanceFetch('/fapi/v2/balance').catch(() => null);
+  if (balData && Array.isArray(balData)) {
+    const usdt = balData.find(b => b.asset === 'USDT');
+    walletBalance = usdt ? parseFloat(usdt.balance) : null;
+  }
   allTrades = await fetchAllTrades();
   allIncome = await fetchIncome();
   populateSymbolFilter();
@@ -1346,6 +1388,20 @@ function renderStats(trades, income) {
   setEl('s-fees', fmt(fees));
   setEl('s-netpnl', fmt(netPnl), netPnl >= 0 ? 'green' : 'red');
   setEl('s-avg', fmt(avg), avg >= 0 ? 'green' : 'red');
+
+  // Wallet balance + return on capital
+  // Starting capital = current balance minus net PnL in period (strips out profits already made)
+  if (walletBalance !== null) {
+    const startingCapital = walletBalance - netPnl;
+    document.getElementById('s-wallet').textContent = startingCapital.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    document.getElementById('s-wallet').parentElement.querySelector('.stat-label').textContent = 'Starting Capital';
+    const roc = startingCapital > 0 ? (netPnl / startingCapital) * 100 : 0;
+    setEl('s-roc', roc.toFixed(2) + '%', roc >= 0 ? 'green' : 'red');
+    document.getElementById('s-roc-sub').textContent = `${fmt(netPnl)} ÷ ${startingCapital.toLocaleString('en-US', {maximumFractionDigits: 2})} USDT`;
+  } else {
+    document.getElementById('s-wallet').textContent = 'N/A';
+    document.getElementById('s-roc').textContent = 'N/A';
+  }
 }
 
 function renderRatios(trades, income) {
@@ -1434,7 +1490,7 @@ function renderSymbolTable(trades) {
       <td style="color:var(--text-muted)">${fmt(d.fees)}</td>
       <td class="${netClass}">${fmt(net)}</td>
     </tr>`;
-  }).join('') || '<tr><td colspan="6" style="color:var(--text-muted);text-align:center;padding:20px">No trades in this period</td></tr>';
+  }).join('') || `<tr><td colspan="6" style="color:var(--text-muted);text-align:center;padding:20px">${t('noTrades')}</td></tr>`;
 }
 
 function renderEquityChart(income) {
@@ -1547,7 +1603,7 @@ function renderTradeHistory(trades) {
       <td class="${pnlClass}">${pnl !== 0 ? fmt(pnl) : '—'}</td>
       <td style="color:var(--text-muted)">${fmt(parseFloat(t.commission || 0))}</td>
     </tr>`;
-  }).join('') || '<tr><td colspan="7" style="color:var(--text-muted);text-align:center;padding:20px">No trades in this period</td></tr>';
+  }).join('') || `<tr><td colspan="7" style="color:var(--text-muted);text-align:center;padding:20px">${t('noTrades')}</td></tr>`;
 }
 
 // ── CHART OPTIONS ──
@@ -1599,6 +1655,145 @@ function setEl(id, val, colorClass = '') {
 }
 function showError(id, msg) { const el = document.getElementById(id); el.textContent = msg; el.style.display = 'block'; }
 function hideError(id) { document.getElementById(id).style.display = 'none'; }
+
+
+// ── i18n ──
+let currentLang = 'en';
+
+const T = {
+  en: {
+    logoSub: 'Futures Performance Portal',
+    liveData: 'LIVE DATA',
+    disconnect: '✕ Disconnect',
+    loading: 'FETCHING TRADING DATA...',
+    connectTitle: 'Connect Your Account',
+    connectSub: 'Enter your Binance Futures read-only API keys to load your performance data.',
+    apiKeyLbl: 'API Key', apiSecretLbl: 'API Secret',
+    apiKeyPh: 'Paste your Binance API key', apiSecretPh: 'Paste your API secret',
+    secNote: 'Keys are used only in your browser to sign requests directly to Binance. They are never stored or transmitted to any server.',
+    connectBtn: 'Connect & Load Data', connectingBtn: 'Connecting...',
+    allSymbols: 'All Symbols', longShort: 'Long & Short', longOnly: 'Long Only', shortOnly: 'Short Only',
+    refresh: '↻ Refresh',
+    secOverview: 'Overview', secCharts: 'Performance Charts', secRatios: 'Financial Ratios',
+    secLS: 'Long vs Short Breakdown', secCal: 'PnL Calendar',
+    slPnl: 'Total Realised PnL', slTrades: 'Total Trades', slWinRate: 'Win Rate',
+    slBest: 'Best Trade', slWorst: 'Worst Trade', slFees: 'Total Fees Paid',
+    slNet: 'Net PnL (after fees)', slAvg: 'Avg Trade PnL', slCap: 'Starting Capital', slRoc: 'Return on Capital',
+    subInPeriod: 'in period', subFees: 'commission drag', subNet: 'realised − fees', subAvg: 'per closed trade', subCap: 'wallet before period PnL',
+    ctEquity: 'Cumulative PnL Curve', ctDaily: 'Daily PnL', ctDailySub: 'bar chart',
+    ctMonthly: 'Monthly PnL Heatmap', ctMonthlySub: 'grouped by month',
+    ctLS: 'Long vs Short PnL', ctLSSub: 'comparison',
+    calTitle: 'Daily PnL — Month View', calProfit: 'Profit day', calLoss: 'Loss day', calNone: 'No trades',
+    calMonthPnl: 'Month PnL', calTradingDays: 'Trading Days', calWinDays: 'Win Days', calTotalTrades: 'Total Trades',
+    rfPF: 'Profit Factor', rfPFd: 'Gross profit ÷ gross loss. >1.5 is solid.',
+    rfSharpe: 'Sharpe Ratio', rfSharped: 'Daily PnL return vs volatility.',
+    rfExp: 'Expectancy', rfExpd: 'Avg expected USDT per trade.',
+    rfRR: 'Avg R:R', rfRRd: 'Avg win ÷ avg loss size.',
+    rfDD: 'Max Drawdown', rfDDd: 'Largest peak-to-trough loss.',
+    rfCalmar: 'Calmar Ratio', rfCalmard: 'Total PnL ÷ max drawdown.',
+    symTitle: 'Performance by Symbol',
+    thSym: 'Symbol', thTrades: 'Trades', thWin: 'Win%', thGross: 'Gross PnL', thFees: 'Fees', thNet: 'Net PnL',
+    histTitle: 'Trade History',
+    thTime: 'Time', thSide: 'Side', thQty: 'Qty', thPrice: 'Price', thRpnl: 'Realised PnL', thComm: 'Commission',
+    lsLong: 'Long PnL', lsShort: 'Short PnL',
+    noTrades: 'No trades in this period',
+    footer: '© 2026 NineFi Group · ninefigroup.com.sg · Futures Performance Portal · Read-only API · No trade execution',
+  },
+  zh: {
+    logoSub: '期货绩效门户',
+    liveData: '实时数据',
+    disconnect: '✕ 断开连接',
+    loading: '正在获取交易数据...',
+    connectTitle: '连接您的账户',
+    connectSub: '输入您的币安期货只读API密钥以加载绩效数据。',
+    apiKeyLbl: 'API 密钥', apiSecretLbl: 'API 私钥',
+    apiKeyPh: '粘贴您的币安 API 密钥', apiSecretPh: '粘贴您的 API 私钥',
+    secNote: '密钥仅在您的浏览器中使用，直接向币安签名请求，不会存储或传输至任何服务器。',
+    connectBtn: '连接并加载数据', connectingBtn: '连接中...',
+    allSymbols: '全部交易对', longShort: '多空均显', longOnly: '仅多单', shortOnly: '仅空单',
+    refresh: '↻ 刷新',
+    secOverview: '总览', secCharts: '绩效图表', secRatios: '财务指标',
+    secLS: '多空对比', secCal: '盈亏日历',
+    slPnl: '总已实现盈亏', slTrades: '总交易笔数', slWinRate: '胜率',
+    slBest: '最佳交易', slWorst: '最差交易', slFees: '总手续费',
+    slNet: '净盈亏（扣手续费）', slAvg: '平均每笔盈亏', slCap: '期初资金', slRoc: '资金回报率',
+    subInPeriod: '本期内', subFees: '手续费消耗', subNet: '已实现 − 手续费', subAvg: '每笔平均', subCap: '期前钱包余额',
+    ctEquity: '累计盈亏曲线', ctDaily: '每日盈亏', ctDailySub: '柱状图',
+    ctMonthly: '月度盈亏热力图', ctMonthlySub: '按月分组',
+    ctLS: '多空盈亏对比', ctLSSub: '对比图',
+    calTitle: '每日盈亏 — 月视图', calProfit: '盈利日', calLoss: '亏损日', calNone: '无交易',
+    calMonthPnl: '月度盈亏', calTradingDays: '交易天数', calWinDays: '盈利天数', calTotalTrades: '总笔数',
+    rfPF: '盈利因子', rfPFd: '总盈利 ÷ 总亏损，>1.5 表现良好。',
+    rfSharpe: '夏普比率', rfSharped: '每日盈亏收益与波动率之比。',
+    rfExp: '期望值', rfExpd: '每笔交易预期USDT收益。',
+    rfRR: '平均盈亏比', rfRRd: '平均盈利 ÷ 平均亏损。',
+    rfDD: '最大回撤', rfDDd: '峰值到谷值的最大亏损。',
+    rfCalmar: '卡玛比率', rfCalmard: '总盈亏 ÷ 最大回撤。',
+    symTitle: '各交易对绩效',
+    thSym: '交易对', thTrades: '笔数', thWin: '胜率', thGross: '毛盈亏', thFees: '手续费', thNet: '净盈亏',
+    histTitle: '交易记录',
+    thTime: '时间', thSide: '方向', thQty: '数量', thPrice: '价格', thRpnl: '已实现盈亏', thComm: '手续费',
+    lsLong: '多单盈亏', lsShort: '空单盈亏',
+    noTrades: '本期内无交易记录',
+    footer: '© 2026 NineFi Group · ninefigroup.com.sg · 期货绩效门户 · 只读API · 无交易执行',
+  }
+};
+
+function t(k) { return (T[currentLang] && T[currentLang][k]) || (T.en[k]) || k; }
+
+function setLang(lang) {
+  currentLang = lang;
+  document.getElementById('lang-en').classList.toggle('active', lang === 'en');
+  document.getElementById('lang-zh').classList.toggle('active', lang === 'zh');
+  applyLang();
+}
+
+function s(id, v) { const e = document.getElementById(id); if (e) e.textContent = v; }
+function sp(id, v) { const e = document.getElementById(id); if (e) e.placeholder = v; }
+function so(selId, val, txt) { const o = document.querySelector(`#${selId} option[value="${val}"]`); if (o) o.textContent = txt; }
+
+function applyLang() {
+  const L = T[currentLang];
+  s('logo-sub-el', L.logoSub);
+  s('live-badge-el', L.liveData);
+  s('btn-disconnect', L.disconnect);
+  s('loading-el', L.loading);
+  s('setup-title-el', L.connectTitle);
+  s('setup-sub-el', L.connectSub);
+  s('api-key-lbl', L.apiKeyLbl); s('api-secret-lbl', L.apiSecretLbl);
+  sp('api-key', L.apiKeyPh); sp('api-secret', L.apiSecretPh);
+  s('sec-note-el', L.secNote);
+  s('btn-connect', L.connectBtn);
+  so('symbol-filter','ALL',L.allSymbols);
+  so('side-filter','ALL',L.longShort); so('side-filter','BUY',L.longOnly); so('side-filter','SELL',L.shortOnly);
+  s('btn-refresh-el', L.refresh);
+  s('sec-overview', L.secOverview); s('sec-charts', L.secCharts); s('sec-ratios', L.secRatios);
+  s('sec-ls', L.secLS); s('sec-cal', L.secCal);
+  s('sl-pnl', L.slPnl); s('sl-trades', L.slTrades); s('sl-winrate', L.slWinRate);
+  s('sl-best', L.slBest); s('sl-worst', L.slWorst); s('sl-fees', L.slFees);
+  s('sl-net', L.slNet); s('sl-avg', L.slAvg); s('sl-cap', L.slCap); s('sl-roc', L.slRoc);
+  s('sub-fees', L.subFees); s('sub-net', L.subNet); s('sub-avg', L.subAvg); s('sub-cap', L.subCap);
+  s('ct-equity', L.ctEquity); s('ct-daily', L.ctDaily); s('ct-daily-sub', L.ctDailySub);
+  s('ct-monthly', L.ctMonthly); s('ct-monthly-sub', L.ctMonthlySub);
+  s('ct-ls', L.ctLS); s('ct-ls-sub', L.ctLSSub);
+  s('cal-title-el', L.calTitle);
+  s('cal-leg-profit', L.calProfit); s('cal-leg-loss', L.calLoss); s('cal-leg-none', L.calNone);
+  s('rf-pf', L.rfPF); s('rd-pf', L.rfPFd);
+  s('rf-sharpe', L.rfSharpe); s('rd-sharpe', L.rfSharped);
+  s('rf-exp', L.rfExp); s('rd-exp', L.rfExpd);
+  s('rf-rr', L.rfRR); s('rd-rr', L.rfRRd);
+  s('rf-dd', L.rfDD); s('rd-dd', L.rfDDd);
+  s('rf-calmar', L.rfCalmar); s('rd-calmar', L.rfCalmard);
+  s('sym-title', L.symTitle);
+  s('th-sym', L.thSym); s('th-trades', L.thTrades); s('th-win', L.thWin);
+  s('th-gross', L.thGross); s('th-fees-h', L.thFees); s('th-net-h', L.thNet);
+  s('hist-title', L.histTitle);
+  s('th-time', L.thTime); s('th-side', L.thSide); s('th-qty', L.thQty);
+  s('th-price', L.thPrice); s('th-rpnl', L.thRpnl); s('th-comm', L.thComm);
+  s('ls-long-lbl', L.lsLong); s('ls-short-lbl', L.lsShort);
+  s('footer-el', L.footer);
+  if (document.getElementById('dashboard').style.display !== 'none') renderDashboard();
+}
 
 // Allow Enter key to connect
 document.addEventListener('keydown', e => {
